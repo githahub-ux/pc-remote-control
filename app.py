@@ -63,25 +63,12 @@ def redis_json(key):
     return json.loads(value) if value else None
 
 
-def agent_is_configured():
-    return bool(os.environ.get("AGENT_TOKEN"))
-
-
 def require_login():
     session_token = request.cookies.get(SESSION_COOKIE_NAME, "")
     if not SESSION_TOKEN_PATTERN.fullmatch(session_token):
         return jsonify(error="Authentication required"), 401
     if not redis_command("GET", f"browser:session:{session_token}"):
         return jsonify(error="Authentication required"), 401
-    return None
-
-
-def require_agent():
-    expected = os.environ.get("AGENT_TOKEN", "")
-    supplied = request.headers.get("Authorization", "")
-    supplied = supplied.removeprefix("Bearer ")
-    if not expected or not hmac.compare_digest(supplied, expected):
-        return jsonify(error="Agent authentication failed"), 401
     return None
 
 
@@ -150,10 +137,6 @@ def login():
 
 @app.post("/api/agent/register")
 def agent_register():
-    denied = require_agent()
-    if denied:
-        return denied
-
     code = "".join(secrets.choice(PAIRING_CODE_ALPHABET) for _ in range(3))
     redis_command(
         "SET",
@@ -201,8 +184,6 @@ def create_command():
     denied = require_login()
     if denied:
         return denied
-    if not agent_is_configured():
-        return jsonify(error="AGENT_TOKEN is not configured"), 503
 
     body = request.get_json(silent=True)
     if not isinstance(body, dict):
@@ -241,10 +222,6 @@ def get_command(command_id):
 
 @app.post("/api/agent/next")
 def agent_next():
-    denied = require_agent()
-    if denied:
-        return denied
-
     body = request.get_json(silent=True)
     if not isinstance(body, dict):
         return jsonify(error="Invalid agent request"), 400
@@ -276,9 +253,6 @@ def agent_next():
 
 @app.post("/api/agent/results/<command_id>")
 def agent_result(command_id):
-    denied = require_agent()
-    if denied:
-        return denied
     if not COMMAND_ID_PATTERN.fullmatch(command_id):
         return jsonify(error="Unknown command"), 404
 

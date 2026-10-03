@@ -14,7 +14,6 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(mess
 LOGGER = logging.getLogger("pc-client")
 
 REMOTE_CONTROL_URL = "https://your-project.vercel.app"
-AGENT_TOKEN = "paste-the-same-agent-token-configured-in-vercel"
 ALLOWED_APPS = {
     "Calculator": ["calc.exe"],
 }
@@ -36,10 +35,9 @@ def load_allowed_apps():
 
 
 class PcAgent:
-    def __init__(self, base_url, token, allowed_apps):
+    def __init__(self, base_url, allowed_apps):
         self.base_url = base_url.rstrip("/")
         self.session = requests.Session()
-        self.session.headers.update({"Authorization": f"Bearer {token}"})
         self.allowed_apps = allowed_apps
         self.processes = {}
 
@@ -146,9 +144,7 @@ class PcAgent:
 def main():
     if REMOTE_CONTROL_URL == "https://your-project.vercel.app":
         raise SystemExit("Set REMOTE_CONTROL_URL near the top of pc_client.py")
-    if not AGENT_TOKEN or AGENT_TOKEN == "paste-the-same-agent-token-configured-in-vercel":
-        raise SystemExit("Set AGENT_TOKEN near the top of pc_client.py")
-    PcAgent(REMOTE_CONTROL_URL, AGENT_TOKEN, load_allowed_apps()).run()
+    PcAgent(REMOTE_CONTROL_URL, load_allowed_apps()).run()
 
 
 if __name__ == "__main__":
