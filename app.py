@@ -19,8 +19,8 @@ SESSION_COOKIE_NAME = "pc_remote_session"
 SESSION_TOKEN_PATTERN = re.compile(r"^[A-Za-z0-9_-]{43}$")
 PAIRING_CODE_TTL_SECONDS = 300
 PAIRING_ATTEMPTS_PER_MINUTE = 5
-PAIRING_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789"
-PAIRING_CODE_PATTERN = re.compile(r"^[A-HJ-NP-Z2-9]{3}$")
+PAIRING_CODE_ALPHABET = "ABCDEFGHJKLMNPQRSTUVWXYZ123456789"
+PAIRING_CODE_PATTERN = re.compile(r"^[A-HJ-NP-Z1-9]{3}$")
 COMMAND_ID_PATTERN = re.compile(r"^[0-9a-f]{32}$")
 ALLOWED_ACTIONS = {"screenshot", "list_apps", "launch_app", "close_app"}
 
@@ -32,8 +32,18 @@ class ConfigurationError(RuntimeError):
 def redis_command(*parts):
     redis_url = os.environ.get("UPSTASH_REDIS_REST_URL")
     redis_token = os.environ.get("UPSTASH_REDIS_REST_TOKEN")
-    if not redis_url or not redis_token:
-        raise ConfigurationError("Upstash Redis is not configured")
+    missing_variables = [
+        name
+        for name, value in (
+            ("UPSTASH_REDIS_REST_URL", redis_url),
+            ("UPSTASH_REDIS_REST_TOKEN", redis_token),
+        )
+        if not value
+    ]
+    if missing_variables:
+        raise ConfigurationError(
+            f"Missing environment variables: {', '.join(missing_variables)}"
+        )
 
     response = requests.post(
         redis_url.rstrip("/"),
