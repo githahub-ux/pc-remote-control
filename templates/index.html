@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f1f3ed">
+    <title>PC Remote</title>
+    <style>
+      :root {
+        color-scheme: light;
+        --ink: #17221e;
+        --muted: #66736b;
+        --paper: #f1f3ed;
+        --panel: #fffefa;
+        --line: #d9dfd5;
+        --green: #176c50;
+        --green-dark: #10543d;
+        --lime: #d8f36a;
+        --red: #a43d30;
+        font-family: "Avenir Next", Avenir, "Segoe UI", sans-serif;
+      }
+      * { box-sizing: border-box; }
+      body {
+        min-height: 100vh;
+        margin: 0;
+        color: var(--ink);
+        background-color: var(--paper);
+        background-image: radial-gradient(#a7b6a8 0.65px, transparent 0.65px);
+        background-size: 18px 18px;
+      }
+      button, input, select { font: inherit; }
+      button { cursor: pointer; }
+      .topbar {
+        height: 64px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 0 5vw;
+        border-bottom: 1px solid var(--line);
+        background: rgba(255, 254, 250, .92);
+      }
+      .brand { display: flex; align-items: center; gap: 11px; font-weight: 750; }
+      .brand-mark {
+        width: 28px; height: 28px; display: grid; place-items: center;
+        border-radius: 7px; color: var(--lime); background: var(--green);
+        font-size: 17px;
+      }
+      .connection { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; }
+      .dot { width: 8px; height: 8px; border-radius: 50%; background: #98a29b; }
+      .dot.online { background: #29a271; box-shadow: 0 0 0 3px #29a27122; }
+      main { width: min(1050px, 90vw); margin: 48px auto; }
+      .heading { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 24px; }
+      .eyebrow { color: var(--green); font-size: 11px; font-weight: 750; text-transform: uppercase; }
+      h1 { margin: 7px 0 0; font-size: clamp(28px, 4vw, 40px); line-height: 1.08; }
+      .subhead { margin: 9px 0 0; color: var(--muted); font-size: 14px; }
+      .workspace { display: grid; grid-template-columns: 280px minmax(0, 1fr); gap: 18px; align-items: start; }
+      .controls, .screen-wrap { border: 1px solid var(--line); border-radius: 8px; background: var(--panel); }
+      .controls { padding: 19px; }
+      .section-label { margin: 0 0 13px; color: var(--muted); font-size: 11px; font-weight: 750; text-transform: uppercase; }
+      .control-group + .control-group { margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--line); }
+      .button {
+        width: 100%; min-height: 42px; display: flex; align-items: center; justify-content: center; gap: 9px;
+        border: 1px solid var(--green); border-radius: 5px; color: white; background: var(--green);
+        font-weight: 650; transition: background .16s ease, transform .16s ease;
+      }
+      .button:hover { background: var(--green-dark); }
+      .button:active { transform: translateY(1px); }
+      .button.secondary { margin-top: 8px; color: var(--ink); border-color: var(--line); background: transparent; }
+      .button.secondary:hover { background: #f1f3ed; }
+      .button:disabled { cursor: wait; opacity: .55; }
+      .select {
+        width: 100%; height: 40px; margin: 0 0 8px; padding: 0 10px;
+        border: 1px solid var(--line); border-radius: 5px; color: var(--ink); background: white;
+      }
+      .screen-wrap { overflow: hidden; }
+      .screen-head { height: 45px; display: flex; align-items: center; justify-content: space-between; padding: 0 15px; border-bottom: 1px solid var(--line); }
+      .screen-title { font-size: 13px; font-weight: 700; }
+      .timestamp { color: var(--muted); font-size: 11px; }
+      .screen {
+        min-height: 320px; display: grid; place-items: center; padding: 14px;
+        background-color: #e8ece5; background-image: linear-gradient(45deg, #dbe1d9 25%, transparent 25%), linear-gradient(-45deg, #dbe1d9 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #dbe1d9 75%), linear-gradient(-45deg, transparent 75%, #dbe1d9 75%);
+        background-size: 24px 24px; background-position: 0 0, 0 12px, 12px -12px, -12px 0;
+      }
+      .screen img { display: block; max-width: 100%; max-height: 70vh; object-fit: contain; box-shadow: 0 4px 24px #17221e20; }
+      .empty { max-width: 290px; color: var(--muted); text-align: center; font-size: 13px; line-height: 1.55; }
+      .notice { min-height: 20px; margin-top: 12px; color: var(--muted); font-size: 12px; }
+      .notice.error { color: var(--red); }
+      .logout { border: 0; color: var(--muted); background: transparent; font-size: 12px; }
+      .login {
+        position: fixed; inset: 0; z-index: 2; display: grid; place-items: center;
+        padding: 20px; background: #17221e99; backdrop-filter: blur(5px);
+      }
+      .login[hidden] { display: none; }
+      .login-panel { width: min(390px, 100%); padding: 28px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); box-shadow: 0 18px 70px #17221e30; }
+      .login-panel h2 { margin: 0 0 6px; font-size: 23px; }
+      .login-panel p { margin: 0 0 19px; color: var(--muted); font-size: 13px; }
+      .pairing-code { width: 100%; height: 54px; margin-bottom: 10px; padding: 0 12px; border: 1px solid var(--line); border-radius: 5px; font-size: 24px; font-weight: 750; text-align: center; text-transform: uppercase; }
+      @media (max-width: 700px) {
+        main { margin: 30px auto; }
+        .heading { align-items: start; }
+        .workspace { grid-template-columns: 1fr; }
+        .controls { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .control-group + .control-group { margin-top: 0; padding-top: 0; border-top: 0; }
+        .screen { min-height: 230px; }
+      }
+      @media (max-width: 430px) {
+        .topbar { padding: 0 5vw; }
+        .controls { grid-template-columns: 1fr; }
+        .heading { flex-direction: column; gap: 13px; }
+      }
+      @media (prefers-reduced-motion: reduce) { *, *::before, *::after { transition-duration: .01ms !important; } }
+    </style>
+  </head>
+  <body>
+    <header class="topbar">
+      <div class="brand"><span class="brand-mark" aria-hidden="true">⌘</span><span>PC Remote</span></div>
+      <div style="display:flex;align-items:center;gap:18px">
+        <span class="connection"><span id="connection-dot" class="dot"></span><span id="connection-text">Checking agent</span></span>
+        <button id="logout" class="logout" type="button" hidden>Sign out</button>
+      </div>
+    </header>
+    <main>
+      <div class="heading">
+        <div><div class="eyebrow">Remote workstation</div><h1>Control room</h1><p class="subhead">Your desktop, at a glance.</p></div>
+      </div>
+      <div class="workspace">
+        <aside class="controls" aria-label="Computer controls">
+          <section class="control-group">
+            <h2 class="section-label">Desktop</h2>
+            <button id="screenshot" class="button" type="button"><span aria-hidden="true">▧</span> Take screenshot</button>
+          </section>
+          <section class="control-group">
+            <h2 class="section-label">Applications</h2>
+            <select id="app-select" class="select" aria-label="Allowed application" disabled><option value="">No apps connected</option></select>
+            <button id="launch" class="button" type="button" disabled><span aria-hidden="true">↗</span> Open app</button>
+            <button id="close" class="button secondary" type="button" disabled><span aria-hidden="true">×</span> Close app</button>
+            <button id="refresh-apps" class="button secondary" type="button" disabled><span aria-hidden="true">↻</span> Refresh apps</button>
+          </section>
+        </aside>
+        <section class="screen-wrap" aria-label="Desktop preview">
+          <div class="screen-head"><span class="screen-title">Live capture</span><span id="timestamp" class="timestamp">No screenshot yet</span></div>
+          <div id="screen" class="screen"><p class="empty">Take a screenshot to view the connected computer's desktop.</p></div>
+        </section>
+      </div>
+      <div id="notice" class="notice" role="status" aria-live="polite"></div>
+    </main>
+    <div id="login" class="login">
+      <form id="login-form" class="login-panel">
+        <h2>Connect computer</h2><p>Enter the 3-character code shown by the PC client.</p>
+        <input id="pairing-code" class="pairing-code" type="text" inputmode="text" autocomplete="one-time-code" autocapitalize="characters" maxlength="3" minlength="3" pattern="[A-HJ-NP-Z2-9]{3}" aria-label="3-character pairing code" placeholder="ABC" required>
+        <button class="button" type="submit">Connect</button>
+        <div id="login-error" class="notice error" role="alert"></div>
+      </form>
+    </div>
+    <script>
+      const loginOverlay = document.querySelector("#login");
+      const notice = document.querySelector("#notice");
+      const select = document.querySelector("#app-select");
+      const controls = ["#screenshot", "#launch", "#close", "#refresh-apps"].map((selector) => document.querySelector(selector));
+
+      async function api(path, options = {}) {
+        const response = await fetch(path, {
+          ...options,
+          headers: { "Content-Type": "application/json", ...options.headers },
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || `Request failed (${response.status})`);
+        return data;
+      }
+
+      function showNotice(message, isError = false) {
+        notice.textContent = message;
+        notice.classList.toggle("error", isError);
+      }
+
+      function setAuthenticated(value) {
+        loginOverlay.hidden = value;
+        document.querySelector("#logout").hidden = !value;
+        controls.forEach((button) => { button.disabled = !value; });
+      }
+
+      async function updateStatus() {
+        try {
+          const status = await api("/api/status");
+          document.querySelector("#connection-dot").classList.toggle("online", status.connected);
+          document.querySelector("#connection-text").textContent = status.connected ? "Computer connected" : "Computer offline";
+          select.replaceChildren(new Option(status.apps.length ? "Choose an app" : "No apps configured", ""));
+          status.apps.forEach((name) => select.add(new Option(name, name)));
+          select.disabled = !status.connected || !status.apps.length;
+          document.querySelector("#launch").disabled = select.disabled;
+          document.querySelector("#close").disabled = select.disabled;
+          document.querySelector("#refresh-apps").disabled = !status.connected;
+        } catch (error) {
+          if (error.message === "Authentication required") setAuthenticated(false);
+          else showNotice(error.message, true);
+        }
+      }
+
+      async function runCommand(action, appName) {
+        showNotice("Sending command…");
+        controls.forEach((button) => { button.disabled = true; });
+        try {
+          const created = await api("/api/commands", {
+            method: "POST",
+            body: JSON.stringify({ action, app: appName }),
+          });
+          const deadline = Date.now() + 45000;
+          while (Date.now() < deadline) {
+            await new Promise((resolve) => setTimeout(resolve, 1200));
+            const command = await api(`/api/commands/${created.id}`);
+            if (command.status === "done") {
+              if (!command.result.ok) throw new Error(command.result.error || "The command failed");
+              if (command.result.image) {
+                const image = document.createElement("img");
+                image.alt = "Screenshot of the connected desktop";
+                image.src = `data:image/jpeg;base64,${command.result.image}`;
+                const screen = document.querySelector("#screen");
+                screen.replaceChildren(image);
+                document.querySelector("#timestamp").textContent = new Date().toLocaleTimeString();
+              }
+              showNotice(command.result.message || "Done");
+              await updateStatus();
+              return;
+            }
+          }
+          throw new Error("Timed out waiting for the PC agent");
+        } catch (error) {
+          showNotice(error.message, true);
+        } finally {
+          await updateStatus();
+        }
+      }
+
+      document.querySelector("#login-form").addEventListener("submit", async (event) => {
+        event.preventDefault();
+        const errorNode = document.querySelector("#login-error");
+        errorNode.textContent = "";
+        try {
+          const input = document.querySelector("#pairing-code");
+          await api("/api/login", { method: "POST", body: JSON.stringify({ code: input.value.trim().toUpperCase() }) });
+          setAuthenticated(true);
+          input.value = "";
+          await updateStatus();
+        } catch (error) { errorNode.textContent = error.message; }
+      });
+      document.querySelector("#pairing-code").addEventListener("input", (event) => {
+        event.target.value = event.target.value.toUpperCase().replace(/[^A-HJ-NP-Z2-9]/g, "").slice(0, 3);
+      });
+      document.querySelector("#logout").addEventListener("click", async () => {
+        await api("/api/logout", { method: "POST", body: "{}" });
+        setAuthenticated(false);
+      });
+      document.querySelector("#screenshot").addEventListener("click", () => runCommand("screenshot"));
+      document.querySelector("#launch").addEventListener("click", () => runCommand("launch_app", select.value));
+      document.querySelector("#close").addEventListener("click", () => runCommand("close_app", select.value));
+      document.querySelector("#refresh-apps").addEventListener("click", () => runCommand("list_apps"));
+      updateStatus().then(() => {
+        if (!loginOverlay.hidden) document.querySelector("#connection-text").textContent = "Enter pairing code";
+      });
+    </script>
+  </body>
+</html>
