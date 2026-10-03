@@ -147,7 +147,7 @@
     <div id="login" class="login">
       <form id="login-form" class="login-panel">
         <h2>Connect computer</h2><p>Enter the 3-character code shown by the PC client.</p>
-        <input id="pairing-code" class="pairing-code" type="text" inputmode="text" autocomplete="one-time-code" autocapitalize="characters" maxlength="3" minlength="3" pattern="[A-HJ-NP-Z2-9]{3}" aria-label="3-character pairing code" placeholder="ABC" required>
+        <input id="pairing-code" class="pairing-code" type="text" inputmode="text" autocomplete="one-time-code" autocapitalize="characters" maxlength="3" minlength="3" pattern="[A-HJ-NP-Z1-9]{3}" aria-label="3-character pairing code" placeholder="ABC" required>
         <button class="button" type="submit">Connect</button>
         <div id="login-error" class="notice error" role="alert"></div>
       </form>
@@ -244,7 +244,7 @@
         } catch (error) { errorNode.textContent = error.message; }
       });
       document.querySelector("#pairing-code").addEventListener("input", (event) => {
-        event.target.value = event.target.value.toUpperCase().replace(/[^A-HJ-NP-Z2-9]/g, "").slice(0, 3);
+        event.target.value = event.target.value.toUpperCase().replace(/[^A-HJ-NP-Z1-9]/g, "").slice(0, 3);
       });
       document.querySelector("#logout").addEventListener("click", async () => {
         await api("/api/logout", { method: "POST", body: "{}" });
